@@ -7,7 +7,7 @@
 #include <vector>
 
 // id del comedero
-#define FEEDER_ID "67fe8221124e98aac99bc43b"  // ID único del comedero
+#define FEEDER_ID "67f57821c597ab31781c074d"  // ID único del comedero
 
 
 // WiFi
@@ -161,6 +161,7 @@ String crearMensajeEstado(int comida1, int comida2, int bateria) {
   doc["type"] = "update_status";
   doc["feederId"] = FEEDER_ID;
   doc["batteryLevel"] = bateria;
+  doc["isActive"] = true;
 
   JsonObject fg1 = doc["floodgates"].createNestedObject("1");
   fg1["foodLevel"] = comida1;
@@ -221,30 +222,55 @@ void parseJson(String message) {
   DeserializationError error = deserializeJson(doc, message);
   if (error) {
     Serial.println("Error al parsear el JSON");
-    Serial.println(message); // para depurar mejor
+    Serial.println(message);  // para depurar mejor
     return;
   }
 
-  // Si incluye un horario semanal
-  if (doc.containsKey("schedule")) {
+  // Validar que tenga floodgates
+  if (doc.containsKey("floodgates")) {
     horariosPermitidos.clear();
-    JsonObject schedule = doc["schedule"];
-    for (JsonPair day : schedule) {
-      String dia = day.key().c_str();
-      JsonObject compuertas = day.value().as<JsonObject>();
 
-      for (JsonPair gate : compuertas) {
-        int num = atoi(gate.key().c_str());
-        JsonArray rangos = gate.value().as<JsonArray>();
+    JsonObject floodgates = doc["floodgates"];
 
-        for (JsonObject rango : rangos) {
-          String inicio = rango["start"].as<String>();
-          String fin = rango["end"].as<String>();
-          horariosPermitidos[dia][num].push_back({ inicio, fin });
+    for (JsonPair fg : floodgates) {
+      int compuerta = atoi(fg.key().c_str());
+      JsonObject dias = fg.value().as<JsonObject>();
+
+      // Recorremos cada día de la semana
+      const char* diasSemana[] = {
+        "monday", "tuesday", "wednesday", "thursday",
+        "friday", "saturday", "sunday"
+      };
+
+      for (const char* dia : diasSemana) {
+        if (!dias.containsKey(dia)) continue;
+
+        JsonObject rango = dias[dia].as<JsonObject>();
+        String inicio = rango["startTime"].as<String>();
+        String fin = rango["endTime"].as<String>();
+
+        String diaCapitalizado = String(dia);
+        diaCapitalizado[0] = toupper(diaCapitalizado[0]);
+
+        horariosPermitidos[diaCapitalizado][compuerta].push_back({ inicio, fin });
+      }
+    }
+
+    Serial.println("🗓️ Horarios actualizados");
+
+    for (auto& dia : horariosPermitidos) {
+      Serial.println("📅 Día: " + dia.first);
+      for (auto& compuerta : dia.second) {
+        Serial.print("  🚪 Compuerta ");
+        Serial.println(compuerta.first);
+        for (auto& intervalo : compuerta.second) {
+          Serial.print("    ⏰ Desde ");
+          Serial.print(intervalo.first);
+          Serial.print(" hasta ");
+          Serial.println(intervalo.second);
         }
       }
     }
-    Serial.println("🗓️ Horarios actualizados");
   }
 }
 
