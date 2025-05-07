@@ -89,11 +89,18 @@ void setup() {
     Serial.print(".");
   }
 
-  configTime(0, 0, "pool.ntp.org");
-
   Serial.println("\n📄 Conectado!");
   Serial.print("IP local: ");
   Serial.println(WiFi.localIP());
+
+  configTime(0, 0, "pool.ntp.org");  // Sincronización de hora desde el servidor NTP
+  Serial.print("Esperando hora...");
+  struct tm timeinfo;
+  while (!getLocalTime(&timeinfo)) {
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.println("✔️ Hora sincronizada!");
 
   // conexion a websocket
   webSocket.begin(ip, port, "/");
