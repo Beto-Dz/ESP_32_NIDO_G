@@ -200,7 +200,11 @@ void loop() {
     doc["type"] = "register_visit";
     doc["idFeeder"] = FEEDER_ID;
     doc["floodgate_number"] = 1;
-    
+
+    String mensaje;
+    serializeJson(doc, mensaje);
+    webSocket.sendTXT(mensaje);
+
     delay(3000);
     manejarServo(servo1, false);
   }
@@ -212,6 +216,10 @@ void loop() {
     doc["type"] = "register_visit";
     doc["idFeeder"] = FEEDER_ID;
     doc["floodgate_number"] = 2;
+
+    String mensaje;
+    serializeJson(doc, mensaje);
+    webSocket.sendTXT(mensaje);
 
     delay(3000);
     manejarServo(servo2, false);
