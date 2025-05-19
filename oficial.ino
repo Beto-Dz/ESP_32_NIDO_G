@@ -195,18 +195,26 @@ void loop() {
 
   if (ave1 >= 2 && ave1 <= 6 && estaPermitido(dia, hora, 1)) {
     manejarServo(servo1, true);
-    webSocket.sendTXT("🗣️ Ave detectada - Servo1 abierto");
+
+    StaticJsonDocument<256> doc;
+    doc["type"] = "register_visit";
+    doc["idFeeder"] = FEEDER_ID;
+    doc["floodgate_number"] = 1;
+    
     delay(3000);
     manejarServo(servo1, false);
-    webSocket.sendTXT("Servo1 cerrado después de alimentar");
   }
 
   if (ave2 >= 2 && ave2 <= 6 && estaPermitido(dia, hora, 2)) {
     manejarServo(servo2, true);
-    webSocket.sendTXT("🗣️ Ave detectada - Servo2 abierto");
+
+    StaticJsonDocument<256> doc;
+    doc["type"] = "register_visit";
+    doc["idFeeder"] = FEEDER_ID;
+    doc["floodgate_number"] = 2;
+
     delay(3000);
     manejarServo(servo2, false);
-    webSocket.sendTXT("Servo2 cerrado después de alimentar");
   }
 
   if (millis() - ultimoEnvio >= INTERVALO_ENVIO) {
